@@ -6,6 +6,9 @@ output: html_document
 ---
 
 
+Bu dosyada gözüken veri bilimi kümesi ve incelenmesini Veri Bilimi Okulu yardımıyla yaptım. Youtube kanallarına bakmayı unutmayın ;)
+
+
 #### Kütüp
 
 ```{r echo=TRUE}
@@ -13,6 +16,7 @@ library(dplyr)
 library(tidyr)
 library(readxl)
 library(readxl)
+library(stringr)
 ```
 
 #### Yükleme
@@ -90,6 +94,7 @@ fbi <- fbi[c(14:15,1:13)]
 Bölge ve alt bölgeleri atamak için biraz kod
 
 ```{r}
+
 ############## Northeast ###############
 
 #Region
@@ -98,7 +103,7 @@ fbi$Region[
   which(fbi$Area %in% c("Connecticut","Maine","Massachusetts","New Hampshire","Rhode Island6","Vermont","New Jersey","New York6","Pennsylvania")
         )
   
-] <- "Northeast"
+] <- "Northeast6"
 
 #SubRegions
 
@@ -118,7 +123,7 @@ fbi$SubRegion[
 
 fbi$Region[
   which(fbi$Area %in% c("Illinois","Indiana6","Michigan","Ohio6","Wisconsin6","Iowa","Kansas","Minnesota","Missouri","Nebraska6","North Dakota","South Dakota6"))
-] <- "Midwest"
+] <- "Midwest6"
 
 #SubRegions
 
@@ -138,7 +143,7 @@ fbi$SubRegion[
 fbi$Region[
   which(fbi$Area %in% c("Delaware","District of Columbia7","Florida","Georgia8","Maryland","North Carolina6","South Carolina","Virginia","West Virginia","Alabama","Kentucky","Mississippi6","Tennessee","	
 Arkansas","Louisiana","Oklahoma6","Texas"))
-] <- "South"
+] <- "South6, 7 ,8"
 
 #SubRegion
 
@@ -158,7 +163,7 @@ Arkansas","Louisiana","Oklahoma6","Texas"))
 
 fbi$Region[
   which(fbi$Area %in% c("Arizona","Colorado","Idaho","Montana","Nevada","New Mexico6","Utah","Wyoming","Alaska","California","Hawaii","Oregon6","Washington6","Puerto Rico9"))
-] <- "West"
+] <- "West6"
 
 #SubRegions
 
@@ -176,3 +181,134 @@ fbi$Region[which(fbi$Area == "United States Total6, 7, 8, 9")] <- "Total"
 fbi$SubRegion[which(fbi$Area == "United States Total6, 7, 8, 9")] <- "Total"
 
 ```
+
+Veriyi toplam, bölgeler ve eyalet olarak 3'e bölelim
+
+```{r echo=TRUE}
+
+#Total
+fbi_total <- fbi %>% filter(Region == "Total")
+
+#Region
+fbi_region <- fbi %>% filter(Area %in% c("Northeast6","Midwest6","South6, 7 ,8","West6" ))
+
+#SubRegion 
+fbi_subregion <- fbi %>% filter(SubRegion %in% c("New England","Middle Atlantic","East North Central","West North Central","South Atlantic6, 7, 8","East South Central6","Mountain6","Pacific6"))
+
+#States
+
+fbi_states <- fbi %>% filter( Region != "Total", !is.na(Region))
+```
+
+Yüzdelik değişimi sembolize eden farklı bir set oluşturup yüzdelik değişimden kurtulalım 
+
+```{r echo=TRUE}
+
+#Yüzdelik Değişim 
+
+fbi_percent_change <- fbi_states %>% filter(Year == "Percent change")
+
+#Kurtulma işlemi 
+
+fbi_states <- fbi_states %>% filter(Year != "Percent change") 
+
+```
+
+Biraz da metin manipülasyonu yapalım
+
+```{r echo=TRUE}
+
+fbi_states$Area <- str_remove_all(fbi_states$Area, ",")
+fbi_states$Area <- str_remove_all(fbi_states$Area, "6")
+fbi_states$Area <- str_remove_all(fbi_states$Area, "7")
+fbi_states$Area <- str_remove_all(fbi_states$Area, "8")
+fbi_states$Area <- str_remove_all(fbi_states$Area, "9")
+
+fbi_states$Region <- str_remove_all(fbi_states$Region, ",")
+fbi_states$Region <- str_remove_all(fbi_states$Region, "6")
+fbi_states$Region <- str_remove_all(fbi_states$Region, "7")
+fbi_states$Region <- str_remove_all(fbi_states$Region, "8")
+
+fbi_states$SubRegion <- str_remove_all(fbi_states$SubRegion, ",")
+fbi_states$SubRegion <- str_remove_all(fbi_states$SubRegion, "6")
+fbi_states$SubRegion <- str_remove_all(fbi_states$SubRegion, "7")
+fbi_states$SubRegion <- str_remove_all(fbi_states$SubRegion, "8")
+```
+
+Verinin şu anki yapısı
+
+```{r}
+
+glimpse(fbi_states)
+```
+
+Hala chr'den factor ve numeric'lere çevrilmesi gereken veriler var
+
+```{r}
+
+fbi_states <- fbi_states %>%
+  mutate_at(vars(Population2: `Motor vehicle theft`), funs(as.numeric))
+fbi_states <- fbi_states %>%
+  mutate_at(vars(Region:Year), funs(as.factor))
+
+```
+
+```{r}
+
+fbi_states <- fbi_states %>% rename(State = Area)
+
+```
+
+Veri kümemizin özet istatistikleri
+
+```{r echo=TRUE}
+
+summary(fbi_states)
+
+```
+
+Eksik Gözlem kontrolü
+
+```{r echo=TRUE}
+
+sum(is.na(fbi_states))
+
+```
+
+Outlier varlığı saptamak
+
+```{r echo=TRUE}
+
+boxplot(fbi_states[5:15])
+
+```
+
+Değikenler arası ilişki 
+
+```{r echo=TRUE}
+
+plot(fbi_states[4:7])
+
+```
+Verinin Dağılımı 
+
+```{r echo=TRUE}
+
+hist(fbi_states$Population2)
+
+```
+
+
+2015 ve 2016 olmak üzere veriyi iki farklı tarihe ayırdım
+
+```{r echo=TRUE}
+
+fbi_states2015 <- fbi_states %>% filter(Year == 2015)
+fbi_states2016 <- fbi_states %>% filter(Year == 2016)
+
+```
+
+```{r}
+plot(fbi_states2015[])
+```
+
