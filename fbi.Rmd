@@ -1,0 +1,178 @@
+---
+title: "Markdown 1 FBI"
+author: "Çağdaş Kadıoğlu"
+date: "2023-01-25"
+output: html_document
+---
+
+
+#### Kütüp
+
+```{r echo=TRUE}
+library(dplyr)
+library(tidyr)
+library(readxl)
+library(readxl)
+```
+
+#### Yükleme
+
+```{r echo=TRUE}
+library(readxl)
+fbi_ham <- read_excel("fbi.xls")
+fbi <- read_excel("fbi.xls")
+```
+#### Manipülasyon İşlemleri Başlasın
+
+-Verinin Yapısı
+```{r echo=TRUE}
+str(fbi_ham)
+```
+veya
+
+```{r echo=TRUE}
+library(dplyr)
+glimpse(fbi_ham)
+```
+
+İlk ve son 6 gözleme bakış
+
+```{r echo=TRUE}
+head(fbi_ham)
+
+tail(fbi_ham)
+```
+
+Özet
+```{r echo=TRUE}
+summary(fbi_ham)
+```
+
+İlk ve sondaki açıklamaların atılması
+
+```{r echo=TRUE}
+fbi <- fbi_ham[ c(-1,-2, -203:-213),]
+
+```
+
+Değişken İsimlerini Tanımlama 
+
+```{r echo=TRUE}
+names(fbi) <- fbi[1,]
+fbi <- fbi[-1,]
+
+rate <- which(!is.na(fbi[1,]))
+fbi <- fbi[-1, -rate]
+```
+
+Excelde veri yapısının düzenlenmesi
+```{r echo=TRUE}
+fbi$Area[
+  c(
+    which(!is.na(fbi$Area)) + 1,
+    which(!is.na(fbi$Area)) + 2
+  )
+  ] <- fbi$Area[which(!is.na(fbi$Area))]
+```
+
+
+#### Bölgeler
+
+Elde edilen ham veride Amerika 4 bölgeyee ayrılıp 4 bölge kendi arasında 2'ye ayrılmış
+bunu sağlayabiliriz
+
+```{r echo=TRUE}
+fbi$Region <- NA
+fbi$SubRegion <- NA
+fbi <- fbi[c(14:15,1:13)]
+```
+
+Bölge ve alt bölgeleri atamak için biraz kod
+
+```{r}
+############## Northeast ###############
+
+#Region
+
+fbi$Region[
+  which(fbi$Area %in% c("Connecticut","Maine","Massachusetts","New Hampshire","Rhode Island6","Vermont","New Jersey","New York6","Pennsylvania")
+        )
+  
+] <- "Northeast"
+
+#SubRegions
+
+fbi$SubRegion[
+  which(fbi$Area %in% c("Connecticut","Maine","Massachusetts","New Hampshire","Rhode Island6","Vermont")
+        )
+] <- "New England"
+
+fbi$SubRegion[
+  which(fbi$Area %in% c("New Jersey","New York6","Pennsylvania")
+        )
+] <- "Middle Atlantic"
+
+############## Midwest ###############
+
+#Region
+
+fbi$Region[
+  which(fbi$Area %in% c("Illinois","Indiana6","Michigan","Ohio6","Wisconsin6","Iowa","Kansas","Minnesota","Missouri","Nebraska6","North Dakota","South Dakota6"))
+] <- "Midwest"
+
+#SubRegions
+
+fbi$SubRegion[
+  which(fbi$Area %in% c("Illinois","Indiana6","Michigan","Ohio6","Wisconsin6")
+        )
+] <- "East North Central"
+
+fbi$SubRegion[
+  which(fbi$Area %in% c("Iowa","Kansas","Minnesota","Missouri","Nebraska6","North Dakota","South Dakota6"))
+] <- "West North Central"
+
+############## South ###############
+
+#Region
+
+fbi$Region[
+  which(fbi$Area %in% c("Delaware","District of Columbia7","Florida","Georgia8","Maryland","North Carolina6","South Carolina","Virginia","West Virginia","Alabama","Kentucky","Mississippi6","Tennessee","	
+Arkansas","Louisiana","Oklahoma6","Texas"))
+] <- "South"
+
+#SubRegion
+
+fbi$SubRegion[
+  which(fbi$Area %in% c("Delaware","District of Columbia7","Florida","Georgia8","Maryland","North Carolina6","South Carolina","Virginia","West Virginia"))
+] <- "South Atlantic6, 7, 8"
+
+fbi$SubRegion[
+  which(fbi$Area %in% c("Alabama","Kentucky","Mississippi6","Tennessee","	
+Arkansas","Louisiana","Oklahoma6","Texas"))
+] <- "East South Central6"
+
+
+############## West ###############
+
+#Region 
+
+fbi$Region[
+  which(fbi$Area %in% c("Arizona","Colorado","Idaho","Montana","Nevada","New Mexico6","Utah","Wyoming","Alaska","California","Hawaii","Oregon6","Washington6","Puerto Rico9"))
+] <- "West"
+
+#SubRegions
+
+fbi$SubRegion[
+  which(fbi$Area %in% c("Arizona","Colorado","Idaho","Montana","Nevada","New Mexico6","Utah","Wyoming"))
+] <- "Mountain6"
+
+fbi$SubRegion[
+  which(fbi$Area %in% c("Alaska","California","Hawaii","Oregon6","Washington6","Puerto Rico9"))
+] <- "Pacific6"
+
+############## Total ###############
+fbi$Region[which(fbi$Area == "United States Total6, 7, 8, 9")] <- "Total"
+
+fbi$SubRegion[which(fbi$Area == "United States Total6, 7, 8, 9")] <- "Total"
+
+```
